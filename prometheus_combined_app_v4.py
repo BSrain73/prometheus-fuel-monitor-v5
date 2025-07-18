@@ -19,18 +19,23 @@ if uploaded_file:
         st.success("✅ Archivo cargado correctamente")
         st.dataframe(df.head())
 
+        # 🔧 Normalizar nombres de columnas
+        df.columns = df.columns.str.strip().str.lower()
+
         if all(col in df.columns for col in ['km', 'litros']):
-            df["consumo_L_km"] = df["litros"] / df["km"]
-            promedio = round(df["consumo_L_km"].mean(), 2)
+            df["consumo_l_km"] = df["litros"] / df["km"]
+            promedio = round(df["consumo_l_km"].mean(), 2)
             st.metric("Consumo promedio (L/km)", promedio)
 
-            fig = px.histogram(df, x="consumo_L_km", nbins=30, title="Distribución del consumo (L/km)")
+            fig = px.histogram(df, x="consumo_l_km", nbins=30, title="Distribución del consumo (L/km)")
             st.plotly_chart(fig, use_container_width=True)
 
-            st.markdown("Análisis rápido completado.")
+            st.markdown("✅ Análisis rápido completado.")
         else:
-            st.warning("Las columnas 'km' y 'litros' son necesarias para calcular consumo.")
+            st.warning("⚠️ Las columnas 'km' y 'litros' son necesarias para calcular consumo.")
     except Exception as e:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Esperando que cargues un archivo para comenzar.")
+
+          
