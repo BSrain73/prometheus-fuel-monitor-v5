@@ -28,7 +28,7 @@ if uploaded_file:
             df["co2_por_pasajero"] = df["co2_kg"] / df["pasajeros"]
             df["alerta"] = df["consumo_l_km"] > 0.6
 
-            tab1, tab2, tab3, tab4 = st.tabs(["📊 Visión general", "🚐 Por taxibús", "📈 Evolución", "🛠 Modelos"])
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Visión general", "🚐 Por taxibús", "📈 Evolución", "🛠 Modelos", "🏆 Eficiencia"])
 
             with tab1:
                 st.subheader("📌 Indicadores globales")
@@ -63,29 +63,25 @@ if uploaded_file:
 
                     st.markdown("#### 📈 Evolución del consumo (L/km)")
                     fig_evol = px.line(df_bus, x="fecha", y="consumo_l_km", markers=True,
-                                       title="Consumo L/km por fecha",
-                                       labels={"consumo_l_km": "L/km"})
+                                       title="Consumo L/km por fecha")
                     fig_evol.add_hline(y=0.6, line_dash="dot", line_color="red",
                                        annotation_text="Umbral", annotation_position="top right")
                     st.plotly_chart(fig_evol, use_container_width=True)
 
                     st.markdown("#### 🧍‍♂️ Evolución de pasajeros transportados")
                     fig_pax = px.line(df_bus, x="fecha", y="pasajeros", markers=True,
-                                      title="Pasajeros transportados por fecha",
-                                      labels={"pasajeros": "Pasajeros"})
+                                      title="Pasajeros transportados por fecha")
                     st.plotly_chart(fig_pax, use_container_width=True)
 
                     st.markdown("#### ♻️ Evolución de emisiones CO₂eq (kg)")
                     fig_co2 = px.line(df_bus, x="fecha", y="co2_kg", markers=True,
-                                      title="Emisiones CO₂eq por fecha",
-                                      labels={"co2_kg": "CO₂eq (kg)"})
+                                      title="Emisiones CO₂eq por fecha")
                     st.plotly_chart(fig_co2, use_container_width=True)
 
                     st.markdown("#### 🌱 CO₂eq por pasajero transportado")
                     df_bus["co2_por_pasajero"] = df_bus["co2_kg"] / df_bus["pasajeros"]
                     fig_copax = px.line(df_bus, x="fecha", y="co2_por_pasajero", markers=True,
-                                        title="Emisiones CO₂eq por pasajero (kg/pax)",
-                                        labels={"co2_por_pasajero": "CO₂eq/pax"})
+                                        title="Emisiones CO₂eq por pasajero (kg/pax)")
                     st.plotly_chart(fig_copax, use_container_width=True)
 
                 output = io.BytesIO()
@@ -112,23 +108,46 @@ if uploaded_file:
                     st.info("El archivo no contiene columna 'fecha'.")
 
             with tab4:
-                st.subheader("📦 Comparación por modelo (Box Plot)")
+                st.subheader("📦 Comparación por modelo")
                 if "modelo" in df.columns:
                     fig_box = px.box(df, x="modelo", y="consumo_l_km",
                                      title="Distribución de consumo por modelo (L/km)")
                     st.plotly_chart(fig_box, use_container_width=True)
 
-                    st.markdown("#### 🌱 CO₂eq promedio por pasajero por modelo")
-                    df["co2_por_pasajero"] = df["co2_kg"] / df["pasajeros"]
-                    modelo_copax = df.groupby("modelo").agg({
-                        "co2_por_pasajero": "mean"
-                    }).reset_index()
-                    fig_copax_model = px.scatter(modelo_copax, x="modelo", y="co2_por_pasajero",
-                                                 title="CO₂eq por pasajero (promedio) por modelo",
-                                                 labels={"co2_por_pasajero": "CO₂eq/pax"})
+                    st.markdown("#### 🌱 CO₂eq por pasajero por modelo (Box Plot)")
+                    fig_copax_model = px.box(df, x="modelo", y="co2_por_pasajero",
+                                             title="Distribución de CO₂eq por pasajero por modelo",
+                                             labels={"co2_por_pasajero": "CO₂eq/pax"})
                     st.plotly_chart(fig_copax_model, use_container_width=True)
                 else:
                     st.info("No se encontró la columna 'modelo'.")
+
+            with tab5:
+                st.subheader("🏆 Ranking de eficiencia por modelo")
+                if "modelo" in df.columns:
+                    modelo_ranking = df.groupby("modelo").agg({
+                        "consumo_l_km": "mean",
+                        "co2_por_pasajero": "mean"
+                    }).reset_index().sort_values("co2_por_pasajero")
+
+                    st.dataframe(modelo_ranking.style.format({
+                        "consumo_l_km": "{:.2f}",
+                        "co2_por_pasajero": "{:.2f}"
+                    }), use_container_width=True)
+
+                    st.markdown("### 🌱 CO₂eq por pasajero (promedio)")
+                    fig_rank_co2 = px.bar(modelo_ranking, x="modelo", y="co2_por_pasajero",
+                                          title="Ranking de eficiencia ambiental (CO₂eq/pax)",
+                                          labels={"co2_por_pasajero": "CO₂eq/pax"})
+                    st.plotly_chart(fig_rank_co2, use_container_width=True)
+
+                    st.markdown("### ⛽ Consumo de combustible (L/km promedio)")
+                    fig_rank_lkm = px.bar(modelo_ranking, x="modelo", y="consumo_l_km",
+                                          title="Ranking de eficiencia de combustible (L/km)",
+                                          labels={"consumo_l_km": "L/km"})
+                    st.plotly_chart(fig_rank_lkm, use_container_width=True)
+                else:
+                    st.warning("No se encontró la columna 'modelo'.")
 
         else:
             st.error("❌ Las columnas 'km', 'litros' y 'pasajeros' son requeridas.")
@@ -136,6 +155,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Carga un archivo para comenzar.")
+
 
 
 
