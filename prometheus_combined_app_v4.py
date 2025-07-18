@@ -37,7 +37,6 @@ if uploaded_file:
                 col2.metric("Pasajeros totales", int(df["pasajeros"].sum()))
                 col3.metric("CO₂ eq por pasajero (kg)", round(df["co2_por_pasajero"].mean(), 2))
 
-                st.markdown("#### 🔥 Eficiencia por pasajero")
                 fig_eff = px.histogram(df, x="consumo_por_pasajero", nbins=25,
                                        title="Distribución de consumo por pasajero (L/pax)")
                 st.plotly_chart(fig_eff, use_container_width=True)
@@ -61,12 +60,26 @@ if uploaded_file:
                 if "fecha" in df_bus.columns:
                     df_bus["fecha"] = pd.to_datetime(df_bus["fecha"], errors='coerce')
                     df_bus = df_bus.dropna(subset=["fecha"])
+
+                    st.markdown("#### 📈 Evolución del consumo (L/km)")
                     fig_evol = px.line(df_bus, x="fecha", y="consumo_l_km", markers=True,
-                                       title=f"Evolución del consumo de {selected}",
+                                       title="Consumo L/km por fecha",
                                        labels={"consumo_l_km": "L/km"})
                     fig_evol.add_hline(y=0.6, line_dash="dot", line_color="red",
                                        annotation_text="Umbral", annotation_position="top right")
                     st.plotly_chart(fig_evol, use_container_width=True)
+
+                    st.markdown("#### 🧍‍♂️ Evolución de pasajeros transportados")
+                    fig_pax = px.line(df_bus, x="fecha", y="pasajeros", markers=True,
+                                      title="Pasajeros transportados por fecha",
+                                      labels={"pasajeros": "Pasajeros"})
+                    st.plotly_chart(fig_pax, use_container_width=True)
+
+                    st.markdown("#### ♻️ Evolución de emisiones CO₂eq (kg)")
+                    fig_co2 = px.line(df_bus, x="fecha", y="co2_kg", markers=True,
+                                      title="Emisiones CO₂eq por fecha",
+                                      labels={"co2_kg": "CO₂eq (kg)"})
+                    st.plotly_chart(fig_co2, use_container_width=True)
 
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
