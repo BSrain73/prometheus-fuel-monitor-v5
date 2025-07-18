@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import io
 
 st.set_page_config(page_title="Prometheus Fuel Monitor", layout="wide")
 
@@ -51,6 +52,17 @@ if uploaded_file:
                 colb2.metric("Litros totales", int(df_bus["litros"].sum()))
                 colb3.metric("CO₂ eq (kg)", int(df_bus["co2_kg"].sum()))
 
+                # 📤 Exportar a Excel los datos del taxibús seleccionado
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    df_bus.to_excel(writer, index=False, sheet_name="Datos_bus")
+                st.download_button(
+                    label="📥 Descargar Excel del taxibús",
+                    data=output.getvalue(),
+                    file_name=f"reporte_{selected_bus}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
             # Gráfico de consumo por vehículo, coloreado por alerta
             fig_bar = px.bar(df, x="cod_maq", y="consumo_l_km", color="alerta",
                              color_discrete_map={True: "red", False: "green"},
@@ -94,6 +106,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Esperando que cargues un archivo para comenzar.")
+
 
 
           
