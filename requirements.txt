@@ -8,3 +8,5 @@ joblib
 openpyxl
 plotly
 XlsxWriter
+statsmodels
+
