@@ -32,20 +32,31 @@ if uploaded_file:
             umbral = 0.6
             df["alerta"] = df["consumo_l_km"] > umbral
 
-            # KPIs
-            st.subheader("📌 Indicadores clave")
+            # KPIs globales
+            st.subheader("📌 Indicadores globales")
             col1, col2, col3 = st.columns(3)
             col1.metric("Promedio consumo (L/km)", round(df["consumo_l_km"].mean(), 2))
             col2.metric("Total litros consumidos", int(df["litros"].sum()))
             col3.metric("CO₂ equivalente (kg)", int(df["co2_kg"].sum()))
 
-            # Gráfico de consumo por vehículo, coloreado por alerta
+            # Selector de taxibús
             if "cod_maq" in df.columns:
-                fig_bar = px.bar(df, x="cod_maq", y="consumo_l_km", color="alerta",
-                                 color_discrete_map={True: "red", False: "green"},
-                                 title="Consumo por vehículo (con alertas)",
-                                 labels={"cod_maq": "Vehículo", "alerta": "Sobreconsumo"})
-                st.plotly_chart(fig_bar, use_container_width=True)
+                st.subheader("🚐 Indicadores por taxibús")
+                vehiculos = sorted(df["cod_maq"].unique())
+                selected_bus = st.selectbox("Selecciona un vehículo", vehiculos)
+                df_bus = df[df["cod_maq"] == selected_bus]
+
+                colb1, colb2, colb3 = st.columns(3)
+                colb1.metric("Prom. consumo", round(df_bus["consumo_l_km"].mean(), 2))
+                colb2.metric("Litros totales", int(df_bus["litros"].sum()))
+                colb3.metric("CO₂ eq (kg)", int(df_bus["co2_kg"].sum()))
+
+            # Gráfico de consumo por vehículo, coloreado por alerta
+            fig_bar = px.bar(df, x="cod_maq", y="consumo_l_km", color="alerta",
+                             color_discrete_map={True: "red", False: "green"},
+                             title="Consumo por vehículo (con alertas)",
+                             labels={"cod_maq": "Vehículo", "alerta": "Sobreconsumo"})
+            st.plotly_chart(fig_bar, use_container_width=True)
 
             # Histograma con línea de umbral
             fig_hist = px.histogram(df, x="consumo_l_km", nbins=20,
