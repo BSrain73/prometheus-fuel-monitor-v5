@@ -125,8 +125,7 @@ if uploaded_file:
                     }).reset_index()
                     fig_copax_model = px.scatter(modelo_copax, x="modelo", y="co2_por_pasajero",
                                                  title="CO₂eq por pasajero (promedio) por modelo",
-                                                 labels={"co2_por_pasajero": "CO₂eq/pax"},
-                                                 trendline="ols")
+                                                 labels={"co2_por_pasajero": "CO₂eq/pax"})
                     st.plotly_chart(fig_copax_model, use_container_width=True)
                 else:
                     st.info("No se encontró la columna 'modelo'.")
@@ -137,6 +136,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Carga un archivo para comenzar.")
+
 
 
 
