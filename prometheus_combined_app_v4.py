@@ -89,7 +89,7 @@ if uploaded_file:
                     st.plotly_chart(fig_copax, use_container_width=True)
 
                 output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='xlsxwriter") as writer:
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df_bus.to_excel(writer, index=False, sheet_name="Datos_bus")
                 st.download_button("⬇️ Descargar Excel", data=output.getvalue(),
                                    file_name=f"reporte_{selected}.xlsx",
@@ -137,6 +137,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Carga un archivo para comenzar.")
+
 
 
 
