@@ -58,6 +58,16 @@ if uploaded_file:
                 colb2.metric("Pasajeros transportados", int(df_bus["pasajeros"].sum()))
                 colb3.metric("CO₂ eq total (kg)", int(df_bus["co2_kg"].sum()))
 
+                if "fecha" in df_bus.columns:
+                    df_bus["fecha"] = pd.to_datetime(df_bus["fecha"], errors='coerce')
+                    df_bus = df_bus.dropna(subset=["fecha"])
+                    fig_evol = px.line(df_bus, x="fecha", y="consumo_l_km", markers=True,
+                                       title=f"Evolución del consumo de {selected}",
+                                       labels={"consumo_l_km": "L/km"})
+                    fig_evol.add_hline(y=0.6, line_dash="dot", line_color="red",
+                                       annotation_text="Umbral", annotation_position="top right")
+                    st.plotly_chart(fig_evol, use_container_width=True)
+
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     df_bus.to_excel(writer, index=False, sheet_name="Datos_bus")
@@ -66,7 +76,7 @@ if uploaded_file:
                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
             with tab3:
-                st.subheader("📈 Evolución temporal")
+                st.subheader("📈 Evolución temporal general")
                 if "fecha" in df.columns:
                     df["fecha"] = pd.to_datetime(df["fecha"], errors='coerce')
                     df_time = df.dropna(subset=["fecha"])
@@ -82,15 +92,11 @@ if uploaded_file:
                     st.info("El archivo no contiene columna 'fecha'.")
 
             with tab4:
-                st.subheader("🛠 Comparación por modelo")
+                st.subheader("📦 Comparación por modelo (Box Plot)")
                 if "modelo" in df.columns:
-                    modelo_df = df.groupby("modelo").agg({
-                        "consumo_l_km": "mean",
-                        "pasajeros": "sum"
-                    }).reset_index()
-                    fig_model = px.bar(modelo_df, x="modelo", y="consumo_l_km",
-                                       title="Consumo promedio por modelo")
-                    st.plotly_chart(fig_model, use_container_width=True)
+                    fig_box = px.box(df, x="modelo", y="consumo_l_km",
+                                     title="Distribución de consumo por modelo (L/km)")
+                    st.plotly_chart(fig_box, use_container_width=True)
                 else:
                     st.info("No se encontró la columna 'modelo'.")
 
@@ -100,6 +106,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Carga un archivo para comenzar.")
+
 
 
 
