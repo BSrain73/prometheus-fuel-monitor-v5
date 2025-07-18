@@ -81,8 +81,15 @@ if uploaded_file:
                                       labels={"co2_kg": "CO₂eq (kg)"})
                     st.plotly_chart(fig_co2, use_container_width=True)
 
+                    st.markdown("#### 🌱 CO₂eq por pasajero transportado")
+                    df_bus["co2_por_pasajero"] = df_bus["co2_kg"] / df_bus["pasajeros"]
+                    fig_copax = px.line(df_bus, x="fecha", y="co2_por_pasajero", markers=True,
+                                        title="Emisiones CO₂eq por pasajero (kg/pax)",
+                                        labels={"co2_por_pasajero": "CO₂eq/pax"})
+                    st.plotly_chart(fig_copax, use_container_width=True)
+
                 output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                with pd.ExcelWriter(output, engine='xlsxwriter") as writer:
                     df_bus.to_excel(writer, index=False, sheet_name="Datos_bus")
                 st.download_button("⬇️ Descargar Excel", data=output.getvalue(),
                                    file_name=f"reporte_{selected}.xlsx",
@@ -110,6 +117,17 @@ if uploaded_file:
                     fig_box = px.box(df, x="modelo", y="consumo_l_km",
                                      title="Distribución de consumo por modelo (L/km)")
                     st.plotly_chart(fig_box, use_container_width=True)
+
+                    st.markdown("#### 🌱 CO₂eq promedio por pasajero por modelo")
+                    df["co2_por_pasajero"] = df["co2_kg"] / df["pasajeros"]
+                    modelo_copax = df.groupby("modelo").agg({
+                        "co2_por_pasajero": "mean"
+                    }).reset_index()
+                    fig_copax_model = px.scatter(modelo_copax, x="modelo", y="co2_por_pasajero",
+                                                 title="CO₂eq por pasajero (promedio) por modelo",
+                                                 labels={"co2_por_pasajero": "CO₂eq/pax"},
+                                                 trendline="ols")
+                    st.plotly_chart(fig_copax_model, use_container_width=True)
                 else:
                     st.info("No se encontró la columna 'modelo'.")
 
@@ -119,6 +137,7 @@ if uploaded_file:
         st.error(f"❌ Error al procesar el archivo: {e}")
 else:
     st.info("⬆️ Carga un archivo para comenzar.")
+
 
 
 
